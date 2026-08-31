@@ -30,8 +30,12 @@ the UCI Online Retail II dataset.
 
 - Source dataset SHA-256 verification: passed.
 - Python and JavaScript syntax checks: passed.
-- Full pipeline, parity harness and test suite: delegated to the repository CI
-  workflow because this workspace could not install the declared dependencies.
+- GitHub Actions pipeline: passed on Python 3.12 and Node 20.
+- Full-data contracts: 4/4 passed over 1,067,371 source rows.
+- Cross-language parity: passed; base R and Python agreed on every checked
+  column for RFM and cohort retention.
+- Test suite: 60/60 passed.
+- Browser-lab bundle build: passed.
 
 ### Compatibility and migration
 

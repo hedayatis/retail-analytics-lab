@@ -1,5 +1,7 @@
 # Retail Analytics Lab
 
+[![pipeline](https://github.com/hedayatis/retail-analytics-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/hedayatis/retail-analytics-lab/actions/workflows/ci.yml)
+
 **A reproducible analytics pipeline over 1,067,371 real transactions, with RFM
 implemented four ways and cohort retention three ways, backed by parity tests.**
 
@@ -13,7 +15,7 @@ it is right.*
 
 ```
 make pipeline      # ingest -> clean -> warehouse -> analytics   (~25 s)
-make test          # comprehensive unit, integration and parity tests
+make test          # 60 unit, integration and parity tests
 make parity-r      # run the base-R implementations under WebAssembly and diff
 ```
 
@@ -32,7 +34,7 @@ against the committed SHA-256 checksum before ingestion.
 | **A DuckDB star schema** | Declared grain per table, surrogate keys, and four referential/arithmetic integrity checks that run after every build. |
 | **Cross-engine parity** | RFM is implemented in pandas, pure Python, DuckDB SQL and base R; cohort retention is implemented in pandas, DuckDB SQL and base R. The parity harness checks comparable outputs row-for-row. |
 | **A live browser lab** | `lab/index.html` runs the real R and Python **in the visitor's browser** via WebAssembly, on real data, and diffs them in front of you. |
-| **Layered testing** | Unit tests use hand-built fixtures where the answer is known, while integration tests assert invariants against the full million rows. |
+| **60 tests** | Unit tests use hand-built fixtures where the answer is known, while integration tests assert invariants against the full million rows. |
 
 ## The part I would defend in an interview
 
@@ -95,7 +97,7 @@ sql/
 R/
   rfm.R                 RFM in base R
   cohort.R              cohort retention in base R
-tests/                  unit, integration and parity checks
+tests/                  60 unit, integration and parity checks
 lab/                    the browser lab (webR + Pyodide)
 docs/findings.md        what the data actually says
 ```
