@@ -20,6 +20,7 @@ the UCI Online Retail II dataset.
 - A compact, cohort-stratified 25-customer browser sample for responsive
   WebAssembly execution, alongside full-population result summaries.
 - Automated pipeline, test and lab checks through GitHub Actions.
+- GitHub Pages workflow for the public browser lab.
 
 ### Changed
 

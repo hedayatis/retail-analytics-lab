@@ -2,6 +2,8 @@
 
 [![pipeline](https://github.com/hedayatis/retail-analytics-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/hedayatis/retail-analytics-lab/actions/workflows/ci.yml)
 
+**[Open the live browser lab](https://hedayatis.github.io/retail-analytics-lab/)**
+
 **A reproducible analytics pipeline over 1,067,371 real transactions, with RFM
 implemented four ways and cohort retention three ways, backed by parity tests.**
 
