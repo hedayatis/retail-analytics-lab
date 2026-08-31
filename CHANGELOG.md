@@ -1,5 +1,52 @@
 # Changelog
 
+## [1.1.0] - 2026-08-31
+
+**Status:** release
+
+### Added
+
+- Dashboard-first revenue filters, order-value/YoY KPIs and monthly CSV export.
+- Market shares, customer/revenue share comparison, segment exploration,
+  weighted retention curves with eligible populations, and cleaning/attribution
+  visuals with data-grounded insight cards.
+- Structured sample-run results and 24 dependency-free frontend regression tests.
+
+### Changed
+
+- Source code, architecture and execution logs are optional collapsed panels.
+- Explicit scope for historical revenue, full-population aggregates, customer
+  attribution, sample validation and established methods/AI-assisted development.
+
+### Fixed
+
+- Single-pass source highlighting preserves comments/strings and escapes HTML.
+- Correct browser-sample labels; reject empty, duplicate-ID or nonfinite parity
+  results and prevent concurrent runs on shared browser runtimes.
+- Partial-month comparisons, zero denominators, one-point charts, and heatmap
+  text contrast are handled explicitly.
+
+### Validation
+
+- 24/24 Node frontend tests passed locally; JavaScript syntax checks passed.
+- Local full-data pipeline reproduced the published totals; 57 Python tests
+  passed locally, with 3 R-parity tests deferred to CI.
+- Full pipeline and 60 existing Python tests run again in CI; final results and
+  live browser/deployment evidence are recorded in the publishing PR.
+
+### Compatibility and migration
+
+- Backward compatible analytical data and pipeline; same GitHub Pages URL.
+- No dependency change or data migration. Portfolio/book ordering unchanged.
+
+### Known limitations
+
+- CDN-dependent language runtimes; sample results do not estimate population
+  performance. Weighted retention uses rounded input percentages and changing
+  eligible cohort populations. Historical patterns are not causal forecasts.
+- Independent authorship/novelty audit and source-specific licensing reconciliation
+  are not claimed. Existing dataset notices remain in force for this bundle.
+
 ## [1.0.1] - 2026-08-31
 
 **Status:** release

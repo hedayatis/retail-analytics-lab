@@ -49,6 +49,9 @@ jobs:
       - name: Build the browser lab bundle
         run: make lab
 
+      - name: Dashboard calculations and source-rendering regressions
+        run: cd lab && npm test
+
       - uses: actions/upload-artifact@v4
         with:
           name: run-reports

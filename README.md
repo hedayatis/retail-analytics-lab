@@ -4,15 +4,14 @@
 
 **[Open the live browser lab](https://hedayatis.github.io/retail-analytics-lab/)**
 
-Current revision: **1.0.1**. Release history and validation are recorded in
+Current revision: **1.1.0**. Release history and validation are recorded in
 `CHANGELOG.md`. GitHub Pages uses a unique artifact per workflow run and retry.
 
 **A reproducible analytics pipeline over 1,067,371 real transactions, with RFM
 implemented four ways and cohort retention three ways, backed by parity tests.**
 
-Built on the UCI **Online Retail II** dataset — the transactions behind Chen,
-Sain & Guo (2012), the paper that made RFM segmentation a standard technique on
-this class of data. Real data, real defects, no synthetic filler.
+Built on the UCI **Online Retail II** dataset, with established RFM and cohort
+methods. Chen, Sain & Guo (2012) provide a related retail RFM case study.
 
 The point of this repository is not "here is a chart of some sales". It is:
 *here is how I build the thing that produces the chart, and here is the evidence
@@ -40,6 +39,7 @@ against the committed SHA-256 checksum before ingestion.
 | **Cross-engine parity** | RFM is implemented in pandas, pure Python, DuckDB SQL and base R; cohort retention is implemented in pandas, DuckDB SQL and base R. The parity harness checks comparable outputs row-for-row. |
 | **A live browser lab** | `lab/index.html` runs the real R and Python **in the visitor's browser** via WebAssembly, on real data, and diffs them in front of you. |
 | **60 tests** | Unit tests use hand-built fixtures where the answer is known, while integration tests assert invariants against the full million rows. |
+| **24 dashboard checks** | Protect source rendering, period filters, weighted retention, denominators, sample comparisons and interface structure. |
 
 ## The part I would defend in an interview
 
@@ -109,15 +109,37 @@ docs/findings.md        what the data actually says
 
 ## The browser lab
 
-`lab/` is a static site that loads two WebAssembly runtimes on demand — **webR**
-(a complete R 4.6) and **Pyodide** — and executes the repository's own R and
-Python source on a cohort-stratified sample of 25 real customers. Nothing is
-pre-rendered; the visitor can edit the code and re-run it, and the parity
-harness diffs the two languages live.
+`lab/` opens as an analytical dashboard, not a script notebook:
+
+- Revenue-period and metric controls, weighted average order value, complete-month
+  YoY comparisons, monthly values and CSV export.
+- Full-history market shares (including other countries), customer/revenue share
+  comparisons, segment details and evidence-based interpretation cards.
+- Cohort-size-weighted repeat-purchase curves, eligibility counts, and a retention
+  heatmap distinguishing unobserved and partial months.
+- Cleaning-rule counts and revenue attribution coverage, with the audit ledger.
+
+The dashboard uses **precomputed full-population aggregates** in `data/results.json`.
+Filters and derived insights recalculate immediately in JavaScript. Revenue
+controls affect only the revenue KPIs/trend; customer and country views remain
+full-history, while the retention curve has its own acquisition-year selector.
+Historical revenue excludes returns and is not profit. Segment revenue includes
+identified customers only. Retention is monthly repeat purchasing, not survival
+or predicted churn; its weighted percentages are approximate because input
+percentages are rounded to two decimals. December 2011 is incomplete and is
+excluded from default revenue and retention comparisons.
+
+The separate live-validation panel loads **webR** and **Pyodide** on demand and
+executes R/Python on a cohort-stratified sample of 25 real customers (2,230 lines).
+Structured results appear without opening code. The sample is for technical
+validation, not population estimation, and does not replace the dashboard data.
+Editable source and execution logs are behind optional, closed disclosure panels.
+Collapsing source is a presentation choice, not source-code confidentiality.
 
 ```
 cd lab && npm install && npm run serve      # http://localhost:8080
 npm run vendor                              # optional: run fully offline
+node --test tests/dashboard.test.mjs         # no additional test dependencies
 ```
 
 By default the runtimes load from jsDelivr, so the folder can be published to
@@ -156,6 +178,26 @@ mining.* Journal of Database Marketing & Customer Strategy Management, 19(3),
 197–208.
 
 The code in this repository is MIT licensed; the data is not mine to license.
+
+The [current UCI direct dataset listing](https://archive.ics.uci.edu/dataset/502/online+retail+ii)
+states CC BY 4.0. This repository still uses the separate package redistribution
+and retains its source-specific non-commercial notice. This revision does not
+relicense that package or silently replace its notice.
+
+## Contribution and originality scope
+
+This is an engineering portfolio implementation using third-party data, open-source
+tools and established analytical methods. It does not claim invention of RFM,
+cohort analysis, database star schemas, or the source dataset. Development and
+publication include AI assistance. The uploaded starting package has not had an
+independent line-by-line authorship audit; passing tests and publishing under an
+account do not establish originality or exclusive ownership. Dependency licences
+remain separate from the repository's code licence.
+
+Revision 1.1.0 adds the dashboard/interface, derived-insight calculations,
+source-highlighting repair and 24 frontend regressions. It does not change the
+underlying RFM/cohort pipeline or source dataset. See
+[`docs/revisions/1.1.0.md`](docs/revisions/1.1.0.md) for formulas and scope.
 
 ---
 
