@@ -1,9 +1,7 @@
 /* ---------------------------------------------------------------------------
    Retail Analytics Lab — styles.
-   Palette: light/dark token pairs, checked for colour-blind separation with a
-   CVD simulator before use (blue #2a78d6 vs orange #eb6834: worst-case ΔE 24.7
-   protanope, well clear of the ΔE 8 floor). Every colour is defined on :root
-   and redefined for dark, so nothing borrows the host theme.
+   Explicit light/dark tokens; charts also use labels and numbers so colour
+   is not the sole carrier of information.
 --------------------------------------------------------------------------- */
 :root{
   color-scheme: light;
@@ -163,3 +161,70 @@ footer{padding:34px 0 56px;color:var(--ink-3);font-size:13px}
        color:var(--ink-2);background:var(--surface)}
 .badge.pass{border-color:var(--ok);color:var(--ok)}
 .badge.fail{border-color:var(--bad);color:var(--bad)}
+
+/* Dashboard-first extension: native controls, charts and optional source. */
+header.top{padding:25px 0 20px}
+header.top .lede{font-size:16px;max-width:68ch;margin-bottom:0}
+.topbar>div:first-child{flex:1;min-width:250px}
+.topbar>.runbar{padding-top:6px;font-size:13px}
+.section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px;flex-wrap:wrap}
+.section-heading .eyebrow{margin-bottom:8px}
+.scope-badge{color:var(--ink-2);font-size:11px;border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+section{padding:34px 0}
+.controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:600;color:var(--ink-2)}
+select{display:block;background:var(--raised);color:var(--ink);border:1px solid var(--line-2);border-radius:7px;font:inherit;font-size:13px;padding:9px 30px 9px 10px;min-height:40px;max-width:100%;margin-top:5px}
+.check-label{display:flex;align-items:center;gap:8px;min-height:40px;font-weight:400}
+input[type=checkbox]{accent-color:var(--accent);width:17px;height:17px}
+.controls button{min-height:40px}
+.card{min-width:0}
+.card h3{margin-bottom:9px}
+.card>label{margin-top:12px}
+.card>select{margin-bottom:16px}
+.chart-takeaway{font-size:13px;line-height:1.65;border-left:3px solid var(--accent);padding:7px 0 7px 12px;margin:14px 0 0;color:var(--ink-2)}
+.insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:6px 0}
+.insight-card{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:10px;padding:17px}
+.insight-card h3{font-size:13px;line-height:1.5}
+.insight-value{font-size:30px;letter-spacing:-.03em;font-weight:650;margin:8px 0;color:var(--ink)}
+.insight-card p:last-child{margin:0}
+.stats .l{color:var(--ink-2)}
+.stat .tiny{font-size:10px;margin-top:6px}
+.segment-stats{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:20px}
+.segment-stats .v{font-size:21px}
+.coverage-meter{height:18px;overflow:hidden;border-radius:5px;background:var(--line);margin:15px 0}
+.coverage-meter span{display:block;height:100%;background:var(--accent)}
+.legend{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--ink-2);flex-wrap:wrap}
+.key{display:inline-block;width:14px;height:9px;border-radius:2px}
+.customer-key{background:var(--accent-2)}
+.revenue-key{background:var(--accent)}
+.share-row{display:grid;grid-template-columns:130px 1fr;column-gap:10px;row-gap:3px;margin-bottom:10px}
+.share-label{grid-row:span 2;font-size:11px;align-self:center;color:var(--ink)}
+.share-track{height:12px;position:relative;background:var(--code-bg);margin-right:43px}
+.share-track>span:first-child{height:100%;display:block;min-width:1px;border-radius:2px}
+.share-value{position:absolute;left:100%;padding-left:7px;top:-3px;font-size:10px;color:var(--ink-2);white-space:nowrap}
+details{border:1px solid var(--line);border-radius:9px;padding:12px 15px;margin:16px 0;background:var(--surface)}
+summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);padding:3px 0;min-height:28px}
+details[open]>summary{margin-bottom:15px}
+#implementation h3{margin:24px 0 12px}
+#implementation .codewrap pre{max-height:400px}
+#implementation textarea{border:1px solid var(--line);border-radius:8px;min-height:260px}
+#arch{min-width:800px}
+.scroll{max-width:100%}
+.tbl th{color:var(--ink-2)}
+.tiny{color:var(--ink-2)}
+#load-status.loaded{font-size:12px;padding:8px 12px;margin-bottom:0;border-color:var(--ok)}
+.skip-link{position:absolute;top:-100px;left:10px;z-index:100;background:var(--surface);padding:12px}
+.skip-link:focus{top:8px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:1000px){.insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+  .wrap{padding:0 16px}h1{font-size:27px}h2{font-size:22px}
+  .controls>label:not(.check-label){flex:1;min-width:120px}.controls select{width:100%}
+  .controls button{flex:1}.controls{padding:12px;gap:10px}
+  #overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{padding:16px}.insight-grid{grid-template-columns:1fr}
+  .share-row{grid-template-columns:107px 1fr}.stat{padding:12px}.stat .v{font-size:20px}
+  nav.toc a{padding:12px 10px}.section-heading{gap:9px}
+  details{padding:10px}section{padding:28px 0}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.dot.busy{animation:none}}

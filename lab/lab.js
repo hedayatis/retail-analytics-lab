@@ -7,6 +7,9 @@
    development and from a static host in production without a code change.
    =========================================================================== */
 "use strict";
+import {highlight} from "./highlight.mjs";
+import {createDashboard} from "./dashboard.mjs";
+import {isCompleteMonth, compareResults} from "./insights.mjs";
 
 const RUNTIME = {
   // webr.js is the BROWSER esm build; webr.mjs is the Node one and imports
@@ -31,7 +34,7 @@ const gbpC = (v) => Math.abs(v) >= 1e6 ? "£" + (v / 1e6).toFixed(2) + "M"
                   : "£" + v.toFixed(0);
 const num = (v) => Number(v).toLocaleString("en-GB");
 
-let DATA = null, SOURCES = null;
+let DATA = null, SOURCES = null, dashboard = null;
 
 /* ------------------------------------------------------------------ theme */
 $("#theme").onclick = () => {
@@ -43,41 +46,9 @@ $("#theme").onclick = () => {
 };
 
 /* ------------------------------------------------- tiny syntax highlighter */
-function highlight(code, lang) {
-  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const kw = {
-    py: /\b(from|import|def|class|return|if|elif|else|for|while|in|not|and|or|None|True|False|with|as|try|except|raise|lambda|yield|assert|dataclass)\b/g,
-    r:  /\b(function|if|else|for|while|return|NULL|NA|TRUE|FALSE|in|source|library)\b/g,
-    sql:/\b(WITH|SELECT|FROM|WHERE|GROUP BY|ORDER BY|JOIN|LEFT JOIN|CROSS JOIN|ON|USING|AS|CASE|WHEN|THEN|ELSE|END|CREATE|OR REPLACE|TABLE|DISTINCT|COUNT|SUM|MIN|MAX|ROUND|COALESCE|CAST|INTEGER|VARCHAR|DATE|TIMESTAMP|BOOLEAN|UNNEST|GENERATE_SERIES|QUANTILE_CONT|PRINTF|MODE|MEDIAN|EXTRACT|DATE_DIFF|ROW_NUMBER|OVER|PARTITION BY|INTERVAL)\b/gi,
-  }[lang] || /$^/;
-  let out = esc(code);
-  const stash = []; const keep = (s) => " " + (stash.push(s) - 1) + " ";
-  out = out.replace(lang === "sql" ? /--[^\n]*/g : /#[^\n]*/g,
-                    (m) => keep('<span class="tok-com">' + m + "</span>"));
-  out = out.replace(/(&quot;|&#39;|"|')(?:(?!\1)[^\n\\]|\\.)*\1/g,
-                    (m) => keep('<span class="tok-str">' + m + "</span>"));
-  out = out.replace(kw, (m) => '<span class="tok-kw">' + m + "</span>");
-  out = out.replace(/\b\d+(\.\d+)?\b/g, (m) => '<span class="tok-num">' + m + "</span>");
-  return out.replace(/ (\d+) /g, (_, i) => stash[+i]);
-}
 const setCode = (node, code, lang) => { node.innerHTML = highlight(code, lang); };
 
 /* --------------------------------------------------------------- rendering */
-function renderStats() {
-  const m = DATA.meta, box = $("#stat-strip");
-  const rows = [
-    [num(m.rows_raw), "raw transaction lines"],
-    [num(m.rows_sales), "clean sales lines"],
-    [num(m.rows_returns), "return lines"],
-    [num(m.customers), "identified customers"],
-    [gbpC(m.revenue_gbp), "clean sales revenue"],
-    [m.date_min.slice(0, 7) + " to " + m.date_max.slice(0, 7), "trading window"],
-  ];
-  box.replaceChildren(...rows.map(([v, l]) => {
-    const d = el("div", "stat"); d.append(el("div", "v", v), el("div", "l", l)); return d;
-  }));
-}
-
 function table(node, cols, rows, fmt = {}) {
   node.replaceChildren();
   const thead = el("thead"), tr = el("tr");
@@ -111,23 +82,6 @@ function renderLedger() {
     "customer genuinely scanned the same item twice on one invoice, is defensible too; " +
     "what is not defensible is making the choice silently. The ledger prices it so a " +
     "reviewer can overrule it in one line.";
-}
-
-function renderDQ() {
-  const rows = [
-    { check: "row count >= 1,000,000", sev: "ERROR", n: "1,067,371", res: "pass" },
-    { check: "invoice matches ^[AC]?\\d{6}$", sev: "ERROR", n: "0 bad", res: "pass" },
-    { check: "date inside published window", sev: "ERROR", n: "0 bad", res: "pass" },
-    { check: "exact duplicate rows", sev: "WARN", n: "34,335", res: "warn" },
-    { check: "fct_sales revenue identity", sev: "ERROR", n: "0 bad", res: "pass" },
-    { check: "rfm_customers primary key", sev: "ERROR", n: "0 dup", res: "pass" },
-    { check: "segment in allowed set", sev: "ERROR", n: "0 bad", res: "pass" },
-    { check: "retention_pct within 0-100", sev: "ERROR", n: "0 bad", res: "pass" },
-  ];
-  table($("#tbl-dq"),
-    [{ key: "check", label: "clause" }, { key: "sev", label: "severity" },
-     { key: "n", label: "observed" }, { key: "res", label: "" }],
-    rows, { res: (v) => v === "pass" ? "✓" : "!" });
 }
 
 /* ------------------------------------------------------------- the diagram */
@@ -186,11 +140,11 @@ function renderArch() {
 function barChart(node, rows, opts) {
   const label = opts.label, value = opts.value;
   const fmt = opts.fmt || gbpC, height = opts.height || 26;
-  const W = node.clientWidth || 520, lw = 138, vr = 66;
+  const W = Math.max(280, node.clientWidth || 520), lw = W < 400 ? 114 : 138, vr = 64;
   const H = rows.length * height + 26;
   const max = Math.max.apply(null, rows.map((r) => r[value]).concat([1]));
   const iw = Math.max(40, W - lw - vr);
-  const svg = sv("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H });
+  const svg = sv("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H, role: "img", "aria-label": opts.title || "Bar chart" });
   [0, max / 2, max].forEach((t) => {
     const x = lw + (t / max) * iw;
     svg.append(sv("line", { x1: x, x2: x, y1: 4, y2: rows.length * height + 2,
@@ -219,38 +173,32 @@ function barChart(node, rows, opts) {
 }
 
 function lineChart(node, rows, opts) {
+  if (!rows.length) { node.textContent = "No fully observed data for this selection."; return; }
   const x = opts.x, y = opts.y, fmt = opts.fmt || gbpC;
-  const W = node.clientWidth || 520, H = 230, P = { t: 12, r: 14, b: 34, l: 52 };
-  const iw = W - P.l - P.r, ih = H - P.t - P.b;
-  const max = Math.max.apply(null, rows.map((r) => r[y]));
-  const mag = Math.pow(10, Math.floor(Math.log10(max / 4)));
-  const s = [1, 2, 2.5, 5, 10].find((k) => k * mag >= max / 4) * mag;
-  const ticks = []; for (let v = 0; v < max; v += s) ticks.push(v);
-  ticks.push(ticks[ticks.length - 1] + s);
-  const top = ticks[ticks.length - 1];
-  const px = (i) => P.l + (i / (rows.length - 1)) * iw;
-  const py = (v) => P.t + ih - (v / top) * ih;
-  const svg = sv("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H });
-  ticks.forEach((t) => {
-    svg.append(sv("line", { x1: P.l, x2: W - P.r, y1: py(t), y2: py(t),
-      stroke: t === 0 ? cssv("--line-2") : cssv("--line"), "stroke-width": 1 }));
-    const tx = sv("text", { x: P.l - 7, y: py(t) + 4, "text-anchor": "end",
-      fill: cssv("--ink-3"), "font-size": 10.5 });
-    tx.textContent = fmt(t); svg.append(tx);
-  });
-  let d = "";
-  rows.forEach((r, i) => { d += (i ? "L" : "M") + px(i) + "," + py(r[y]); });
-  svg.append(sv("path", { d: d, fill: "none", stroke: cssv("--accent"),
-    "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
-  rows.forEach((r, i) => {
-    if (i % 3 === 0 || i === rows.length - 1) {
-      const tx = sv("text", { x: px(i), y: H - P.b + 16, "text-anchor": "middle",
-        fill: cssv("--ink-3"), "font-size": 10 });
-      tx.textContent = String(r[x]).slice(2); svg.append(tx);
+  const W = Math.max(280, node.clientWidth || 520), H = 265, P = {t:18,r:16,b:36,l:72};
+  const iw = W-P.l-P.r, ih = H-P.t-P.b;
+  const top = opts.max || Math.max(1,...rows.map(r=>Number(r[y]) || 0))*1.1;
+  const px = i => rows.length === 1 ? P.l+iw/2 : P.l+i/(rows.length-1)*iw;
+  const py = v => P.t+ih-v/top*ih;
+  const svg = sv("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",height:H,
+    role:"img","aria-label":opts.label || "Monthly trend"});
+  for (let i=0;i<=4;i++) {
+    const v=i*top/4;
+    svg.append(sv("line",{x1:P.l,x2:W-P.r,y1:py(v),y2:py(v),stroke:cssv("--line")}));
+    const text=sv("text",{x:P.l-8,y:py(v)+4,"text-anchor":"end",fill:cssv("--ink-2"),"font-size":10});
+    text.textContent=fmt(v);svg.append(text);
+  }
+  svg.append(sv("path",{d:rows.map((r,i)=>(i?"L":"M")+px(i)+","+py(r[y])).join(" "),
+    fill:"none",stroke:cssv("--accent"),"stroke-width":2.5}));
+  const every=Math.max(1,Math.ceil(rows.length/(W<400?4:7)));
+  rows.forEach((r,i)=>{
+    if(i%every===0 || i===rows.length-1) {
+      const text=sv("text",{x:px(i),y:H-10,"text-anchor":"middle",fill:cssv("--ink-2"),"font-size":10});
+      text.textContent=String(r[x]).startsWith("M+")?r[x]:String(r[x]).slice(2);svg.append(text);
     }
-    const c = sv("circle", { cx: px(i), cy: py(r[y]), r: 7, fill: "transparent" });
-    const ttl = sv("title", {}); ttl.textContent = r[x] + ": " + gbp(r[y]);
-    c.append(ttl); svg.append(c);
+    const c=sv("circle",{cx:px(i),cy:py(r[y]),r:4,fill:cssv(r.complete===false?"--accent-2":"--accent")});
+    const title=sv("title",{});title.textContent=r[x]+": "+fmt(r[y])+(r.complete===false?" (partial month)":"");
+    c.append(title);svg.append(c);
   });
   node.replaceChildren(svg);
 }
@@ -265,6 +213,7 @@ function cohortHeat(node) {
   const ramp = ["--heat-0", "--heat-1", "--heat-2", "--heat-3",
                 "--heat-4", "--heat-5", "--heat-6"].map(cssv);
   const t = el("table", "tbl");
+  t.setAttribute("aria-label", "Cohort retention percentages by months since first purchase");
   const head = el("tr");
   ["cohort", "size"].concat(idx).forEach((h) => head.append(el("th", null, h)));
   const th = el("thead"); th.append(head); t.append(th);
@@ -278,9 +227,16 @@ function cohortHeat(node) {
       if (v != null) {
         const b = v <= 0 ? 0 : Math.min(6, 1 + Math.floor((v / max) * 5.99));
         td.style.background = ramp[b];
-        td.style.color = b >= 5 ? cssv("--surface") : cssv("--ink");
+        const hex = ramp[b].trim().replace("#","");
+        const rgb = hex.length === 3 ? [...hex].map(c=>parseInt(c+c,16)) : [0,2,4].map(i=>parseInt(hex.slice(i,i+2),16));
+        const lum = rgb.map(v=>v/255).map(v=>v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2));
+        const light = 0.2126*lum[0]+0.7152*lum[1]+0.0722*lum[2];
+        td.style.color = light > 0.179 ? "#111111" : "#ffffff";
+        const [year, month] = r.cohort_month.split("-").map(Number);
+        const observed = new Date(Date.UTC(year,month-1+Number(k.slice(2)),1)).toISOString().slice(0,7);
+        if (!isCompleteMonth(observed, DATA.meta)) {td.textContent += "*";td.setAttribute("aria-label",v+" percent, partial observation month");}
         td.title = r.cohort_month + " cohort, " + k + ": " + v + "% of " +
-                   r.cohort_size + " still ordering";
+                   r.cohort_size + " ordering in this month";
       } else {
         td.style.opacity = ".35"; td.textContent = "·";
         td.title = "not observable yet (right-censored)";
@@ -294,17 +250,7 @@ function cohortHeat(node) {
 
 function renderCharts() {
   if (!DATA) return;
-  const segs = DATA.segments.slice();
-  barChart($("#chart-seg"), segs, { label: "segment", value: "total_monetary" });
-  const champ = segs.find((s) => s.segment === "Champions");
-  const totR = segs.reduce((a, s) => a + s.total_monetary, 0);
-  const totC = segs.reduce((a, s) => a + s.customers, 0);
-  $("#seg-note").textContent =
-    "Champions are " + (100 * champ.customers / totC).toFixed(1) +
-    "% of identified customers and hold " + (100 * champ.total_monetary / totR).toFixed(1) +
-    "% of revenue (" + gbpC(champ.total_monetary) + "), averaging " +
-    champ.avg_frequency.toFixed(1) + " orders each.";
-  lineChart($("#chart-monthly"), DATA.monthly, { x: "invoice_month", y: "revenue" });
+  dashboard?.render();
   cohortHeat($("#chart-cohort"));
   renderArch();
 }
@@ -342,7 +288,7 @@ async function getWebR(log) {
     log("sample mounted: " + (csv.length / 1e6).toFixed(1) + " MB");
     return webR;
   })();
-  return webRPromise;
+  try { return await webRPromise; } catch (error) { webRPromise = null; throw error; }
 }
 
 /* ---------------------------------------------------------------- Pyodide */
@@ -360,7 +306,7 @@ async function getPy(log) {
     log("sample mounted: " + (csv.length / 1e6).toFixed(1) + " MB");
     return py;
   })();
-  return pyPromise;
+  try { return await pyPromise; } catch (error) { pyPromise = null; throw error; }
 }
 
 /* ------------------------------------------------------------ run helpers */
@@ -441,65 +387,49 @@ async function runPy(log) {
 }
 
 /* ------------------------------------------------------------ page wiring */
-$("#r-run").onclick = async () => {
-  const log = logger($("#r-out")), btn = $("#r-run");
-  btn.disabled = true; setStatus("r", "working...", "busy");
-  try { await runR(log); setStatus("r", "ready", "ready"); }
-  catch (e) { log("\n" + e, "bad"); setStatus("r", "error", "err"); }
-  finally { btn.disabled = false; }
-};
-
-$("#py-run").onclick = async () => {
-  const log = logger($("#py-out")), btn = $("#py-run");
-  btn.disabled = true; setStatus("py", "working...", "busy");
-  try { await runPy(log); setStatus("py", "ready", "ready"); }
-  catch (e) { log("\n" + e, "bad"); setStatus("py", "error", "err"); }
-  finally { btn.disabled = false; }
-};
-
-$("#parity-run").onclick = async () => {
-  const log = logger($("#parity-out")), btn = $("#parity-run");
-  btn.disabled = true; setStatus("parity", "running both runtimes...", "busy");
+function lockRuns(locked) {
+  ["r-run","py-run","parity-run"].forEach(id=>$("#"+id).disabled=locked);
+}
+function showSample(rows, language) {
+  const total=rows.reduce((n,r)=>n+Number(r.monetary),0);
+  $("#live-summary").textContent=language+" completed: "+num(rows.length)+" sampled customers; "+gbp(total)+
+    " sample sales revenue. These results do not update the full-history dashboard.";
+  table($("#live-table"),[{key:"customer_id",label:"Customer"},{key:"recency_days",label:"Recency days"},
+    {key:"frequency",label:"Orders"},{key:"monetary",label:"Historical spend"},{key:"segment",label:"Segment"}],
+    rows.slice().sort((a,b)=>b.monetary-a.monetary),{monetary:gbp});
+}
+async function execute(kind) {
+  lockRuns(true);
+  $("#live-table").replaceChildren();
+  $("#live-summary").textContent="Loading and running "+(kind==="both"?"R and Python":kind)+
+    " locally in your browser. First-time runtime downloads can take a minute or longer.";
+  setStatus("parity","Running…","busy");
+  const log=logger($("#"+(kind==="R"?"r-out":kind==="Python"?"py-out":"parity-out")));
   try {
-    log("--- R -------------------------------------------------");
-    const r = await runR(log);
-    log("\n--- Python --------------------------------------------");
-    const p = await runPy(log);
-    log("\n--- diff ----------------------------------------------");
-    log("rows: R=" + r.length + "  Python=" + p.length);
-    if (r.length !== p.length) {
-      log("ROW COUNT MISMATCH", "bad");
-      setStatus("parity", "parity broken", "err");
-      return;
+    if(kind==="both") {
+      const r=await runR(log);setStatus("r","Completed","ready");
+      const p=await runPy(log);setStatus("py","Completed","ready");
+      const comparison=compareResults(r,p);
+      comparison.checks.forEach(c=>log(c.column+": "+c.mismatches+" mismatches",c.mismatches?"bad":"ok"));
+      log("Monetary tolerance: £0.005.");
+      showSample(p,"R + Python");
+      $("#live-summary").textContent=(comparison.passed?"Comparison passed":"Comparison failed")+": "+
+        r.length+" R rows, "+p.length+" Python rows; "+comparison.checks.length+
+        " columns checked. Results below are the Python sample output, not the full population.";
+      setStatus("parity",comparison.passed?"All columns agree":"Results disagree",comparison.passed?"ready":"err");
+    } else {
+      const rows=await(kind==="R"?runR(log):runPy(log));
+      showSample(rows,kind);setStatus(kind==="R"?"r":"py","Completed","ready");
+      setStatus("parity",kind+" completed; comparison not run","ready");
     }
-    let bad = 0;
-    ["customer_id", "recency_days", "frequency",
-     "r_score", "f_score", "m_score", "segment"].forEach((c) => {
-      let n = 0;
-      for (let i = 0; i < r.length; i++) {
-        if (String(r[i][c]) !== String(p[i][c])) n++;
-      }
-      bad += n;
-      log("  " + c.padEnd(14) + " mismatches: " + n, n ? "bad" : null);
-    });
-    let mm = 0;
-    for (let i = 0; i < r.length; i++) {
-      if (Math.abs(r[i].monetary - p[i].monetary) > 0.005) mm++;
-    }
-    bad += mm;
-    log("  " + "monetary".padEnd(14) + " mismatches: " + mm +
-        " (tolerance " + "£" + "0.005)", mm ? "bad" : null);
-    log("");
-    log(bad === 0
-      ? "PARITY HOLDS - base R and Python agree on all " + r.length +
-        " customers, every column."
-      : "PARITY BROKEN - " + bad + " disagreements.", bad === 0 ? "ok" : "bad");
-    setStatus("parity", bad === 0 ? "parity holds" : "parity broken",
-              bad === 0 ? "ready" : "err");
-  } catch (e) {
-    log("\n" + e, "bad"); setStatus("parity", "error", "err");
-  } finally { btn.disabled = false; }
-};
+  } catch(error) {
+    log(String(error),"bad");setStatus("parity","Run failed — see logs","err");
+    $("#live-summary").textContent="The sample run failed. Your dashboard is still available. Check your connection and execution logs, then retry.";
+  } finally {lockRuns(false);}
+}
+$("#r-run").onclick=()=>execute("R");
+$("#py-run").onclick=()=>execute("Python");
+$("#parity-run").onclick=()=>execute("both");
 
 $("#sql-pick").onchange = (e) => {
   $("#sql-name").textContent = "sql/" + e.target.value;
@@ -517,22 +447,39 @@ const spy = new IntersectionObserver((entries) => {
 document.querySelectorAll("main section").forEach((s) => spy.observe(s));
 
 /* ------------------------------------------------------------------- boot */
-(async function boot() {
-  const loaded = await Promise.all([
-    fetch("data/results.json").then((r) => r.json()),
-    fetch("data/sources.json").then((r) => r.json()),
-  ]);
-  DATA = loaded[0]; SOURCES = loaded[1];
-  renderStats(); renderLedger(); renderDQ(); renderCharts();
-  setCode($("#code-contract"),
-    SOURCES["schemas.py"].split("\n").slice(0, 46).join("\n"), "py");
-  setCode($("#code-sql"), SOURCES["01_star_schema.sql"], "sql");
-  $("#r-code").value = SOURCES["rfm.R"] + R_DRIVER;
-  $("#py-code").value = SOURCES["rfm_stdlib.py"] + PY_DRIVER;
-  $("#src-link").textContent = num(DATA.meta.sample_rows) + " sampled lines from " +
-    num(DATA.meta.sample_customers) + " customers run in-browser";
-  addEventListener("resize", () => {
-    clearTimeout(window._rz);
-    window._rz = setTimeout(renderCharts, 150);
-  });
-})();
+async function fetchJSON(path) {
+  const response=await fetch(path);
+  if(!response.ok) throw new Error(path+" returned HTTP "+response.status);
+  return response.json();
+}
+async function boot() {
+  const status=$("#load-status");
+  try {
+    DATA=await fetchJSON("data/results.json");
+    dashboard=createDashboard({data:DATA,el,table,barChart,lineChart});
+    renderLedger();renderCharts();
+    $("#analyze-run").disabled=false;$("#export-monthly").disabled=false;
+    status.textContent="Published full-population results loaded. Dashboard filters calculate immediately; language runtimes load only when requested.";
+    status.classList.add("loaded");
+  } catch(error) {
+    status.replaceChildren(el("span",null,"Unable to load the analytical results. Check your connection, then "));
+    const retry=el("button","ghost","Retry loading");retry.onclick=boot;status.append(retry);
+    return;
+  }
+  try {
+    SOURCES=await fetchJSON("data/sources.json");
+    setCode($("#code-contract"),SOURCES["schemas.py"].split("\n").slice(0,46).join("\n"),"py");
+    setCode($("#code-sql"),SOURCES["01_star_schema.sql"],"sql");
+    $("#r-code").value=SOURCES["rfm.R"]+R_DRIVER;
+    $("#py-code").value=SOURCES["rfm_stdlib.py"]+PY_DRIVER;
+    $("#sample-note").textContent=num(DATA.meta.sample_rows)+" transaction lines from "+
+      num(DATA.meta.sample_customers)+" customers run in your browser. The charts above use full-population aggregates and are not changed by sample runs.";
+    lockRuns(false);setStatus("parity","Ready to compare","");
+  } catch(error) {
+    $("#live-summary").textContent="Sample source files could not load. Reload the page to retry; the analytical dashboard remains usable.";
+  }
+}
+addEventListener("resize",()=>{
+  clearTimeout(window._rz);window._rz=setTimeout(renderCharts,150);
+});
+boot();
