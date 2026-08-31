@@ -1,0 +1,893 @@
+{
+ "meta": {
+  "source": "UCI Online Retail II (Chen, D.) via the R package onlineretail2, redistributed with the donor's permission for non-commercial use",
+  "rows_raw": 1067371,
+  "rows_sales": 1003214,
+  "rows_returns": 19104,
+  "customers": 5852,
+  "revenue_gbp": 19642692.15,
+  "date_min": "2009-12-01",
+  "date_max": "2011-12-09",
+  "as_of": "2011-12-10",
+  "sample_customers": 25,
+  "sample_rows": 2230
+ },
+ "ledger": [
+  {
+   "rule": "exact_duplicate",
+   "rows_before": 1067371,
+   "rows_removed": 34335,
+   "rows_after": 1033036,
+   "pct_removed": 3.217,
+   "gross_value_removed": 431716.87,
+   "rationale": "Byte-identical invoice lines (same invoice, product, timestamp, quantity and price) across 5,391 invoices. Treated as double-scanned records; keeping them would inflate revenue and basket size."
+  },
+  {
+   "rule": "routed_to_returns",
+   "rows_before": 1033036,
+   "rows_removed": 22497,
+   "rows_after": 1010539,
+   "pct_removed": 2.178,
+   "gross_value_removed": -1462050.61,
+   "rationale": "Cancellations and negative-quantity lines moved to fct_returns so they cannot be summed into revenue by accident."
+  },
+  {
+   "rule": "ledger_adjustment",
+   "rows_before": 1010539,
+   "rows_removed": 6,
+   "rows_after": 1010533,
+   "pct_removed": 0.001,
+   "gross_value_removed": -147614.08,
+   "rationale": "A-prefixed invoices are bad-debt ledger adjustments, not trade. Six rows carrying up to -\u00a353,594 each; summing them into revenue would move the headline by more than the effect most analyses look for."
+  },
+  {
+   "rule": "non_product_stock_code",
+   "rows_before": 1010533,
+   "rows_removed": 4753,
+   "rows_after": 1005780,
+   "pct_removed": 0.47,
+   "gross_value_removed": 822506.24,
+   "rationale": "Postage, manual credits, bank charges, samples, gift vouchers and test rows share the transaction table with real products but are not sales."
+  },
+  {
+   "rule": "non_positive_price",
+   "rows_before": 1005780,
+   "rows_removed": 2566,
+   "rows_after": 1003214,
+   "pct_removed": 0.255,
+   "gross_value_removed": 0.0,
+   "rationale": "Zero-price lines are stock corrections ('check', '?', 'damages'); only 71 of 6,202 even carry a customer id."
+  },
+  {
+   "rule": "missing_description",
+   "rows_before": 1003214,
+   "rows_removed": 0,
+   "rows_after": 1003214,
+   "pct_removed": 0.0,
+   "gross_value_removed": 0.0,
+   "rationale": "A line with no product description cannot be attributed to a product; these coincide with the manual-adjustment rows."
+  },
+  {
+   "rule": "zero_value_return",
+   "rows_before": 22497,
+   "rows_removed": 3393,
+   "rows_after": 19104,
+   "pct_removed": 15.082,
+   "gross_value_removed": 0.0,
+   "rationale": "Negative-quantity lines priced at zero: stock write-offs ('damages', 'lost', 'check') rather than customer returns. Excluded from fct_returns so return *value* stays meaningful."
+  }
+ ],
+ "monthly": [
+  {
+   "invoice_month": "2009-12",
+   "revenue": 797738.02,
+   "orders": 1666,
+   "customers": 951
+  },
+  {
+   "invoice_month": "2010-01",
+   "revenue": 612271.2,
+   "orders": 1049,
+   "customers": 701
+  },
+  {
+   "invoice_month": "2010-02",
+   "revenue": 537893.54,
+   "orders": 1189,
+   "customers": 771
+  },
+  {
+   "invoice_month": "2010-03",
+   "revenue": 761665.62,
+   "orders": 1647,
+   "customers": 1051
+  },
+  {
+   "invoice_month": "2010-04",
+   "revenue": 646233.18,
+   "orders": 1435,
+   "customers": 939
+  },
+  {
+   "invoice_month": "2010-05",
+   "revenue": 643474.28,
+   "orders": 1484,
+   "customers": 965
+  },
+  {
+   "invoice_month": "2010-06",
+   "revenue": 696439.47,
+   "orders": 1612,
+   "customers": 1034
+  },
+  {
+   "invoice_month": "2010-07",
+   "revenue": 632983.51,
+   "orders": 1507,
+   "customers": 924
+  },
+  {
+   "invoice_month": "2010-08",
+   "revenue": 674036.87,
+   "orders": 1402,
+   "customers": 910
+  },
+  {
+   "invoice_month": "2010-09",
+   "revenue": 869224.44,
+   "orders": 1789,
+   "customers": 1136
+  },
+  {
+   "invoice_month": "2010-10",
+   "revenue": 1094357.68,
+   "orders": 2244,
+   "customers": 1492
+  },
+  {
+   "invoice_month": "2010-11",
+   "revenue": 1429553.47,
+   "orders": 2719,
+   "customers": 1606
+  },
+  {
+   "invoice_month": "2010-12",
+   "revenue": 775572.23,
+   "orders": 1550,
+   "customers": 884
+  },
+  {
+   "invoice_month": "2011-01",
+   "revenue": 670361.99,
+   "orders": 1081,
+   "customers": 739
+  },
+  {
+   "invoice_month": "2011-02",
+   "revenue": 507783.42,
+   "orders": 1093,
+   "customers": 757
+  },
+  {
+   "invoice_month": "2011-03",
+   "revenue": 689708.49,
+   "orders": 1440,
+   "customers": 973
+  },
+  {
+   "invoice_month": "2011-04",
+   "revenue": 515354.78,
+   "orders": 1235,
+   "customers": 853
+  },
+  {
+   "invoice_month": "2011-05",
+   "revenue": 739914.35,
+   "orders": 1668,
+   "customers": 1054
+  },
+  {
+   "invoice_month": "2011-06",
+   "revenue": 737558.98,
+   "orders": 1525,
+   "customers": 990
+  },
+  {
+   "invoice_month": "2011-07",
+   "revenue": 688144.79,
+   "orders": 1452,
+   "customers": 946
+  },
+  {
+   "invoice_month": "2011-08",
+   "revenue": 724196.76,
+   "orders": 1339,
+   "customers": 933
+  },
+  {
+   "invoice_month": "2011-09",
+   "revenue": 1028313.8,
+   "orders": 1818,
+   "customers": 1259
+  },
+  {
+   "invoice_month": "2011-10",
+   "revenue": 1103310.96,
+   "orders": 2005,
+   "customers": 1361
+  },
+  {
+   "invoice_month": "2011-11",
+   "revenue": 1452112.69,
+   "orders": 2751,
+   "customers": 1660
+  },
+  {
+   "invoice_month": "2011-12",
+   "revenue": 614487.63,
+   "orders": 816,
+   "customers": 614
+  }
+ ],
+ "by_country": [
+  {
+   "country": "United Kingdom",
+   "line_revenue": 16799849.9
+  },
+  {
+   "country": "EIRE",
+   "line_revenue": 623414.16
+  },
+  {
+   "country": "Netherlands",
+   "line_revenue": 549773.41
+  },
+  {
+   "country": "Germany",
+   "line_revenue": 383289.0
+  },
+  {
+   "country": "France",
+   "line_revenue": 311090.29
+  },
+  {
+   "country": "Australia",
+   "line_revenue": 167800.01
+  },
+  {
+   "country": "Spain",
+   "line_revenue": 97766.75
+  },
+  {
+   "country": "Switzerland",
+   "line_revenue": 94024.59
+  },
+  {
+   "country": "Sweden",
+   "line_revenue": 86319.14
+  },
+  {
+   "country": "Denmark",
+   "line_revenue": 67422.69
+  }
+ ],
+ "segments": [
+  {
+   "segment": "Champions",
+   "customers": 1395,
+   "avg_recency_days": 20.28,
+   "avg_frequency": 16.19,
+   "avg_monetary": 8391.6,
+   "total_monetary": 11706285.62,
+   "pct_customers": 23.84,
+   "pct_revenue": 68.58
+  },
+  {
+   "segment": "Loyal customers",
+   "customers": 1185,
+   "avg_recency_days": 76.85,
+   "avg_frequency": 5.57,
+   "avg_monetary": 2088.1,
+   "total_monetary": 2474395.75,
+   "pct_customers": 20.25,
+   "pct_revenue": 14.5
+  },
+  {
+   "segment": "Cannot lose them",
+   "customers": 286,
+   "avg_recency_days": 338.83,
+   "avg_frequency": 8.57,
+   "avg_monetary": 3322.25,
+   "total_monetary": 950162.45,
+   "pct_customers": 4.89,
+   "pct_revenue": 5.57
+  },
+  {
+   "segment": "Lost",
+   "customers": 1099,
+   "avg_recency_days": 545.79,
+   "avg_frequency": 1.54,
+   "avg_monetary": 520.14,
+   "total_monetary": 571630.73,
+   "pct_customers": 18.78,
+   "pct_revenue": 3.35
+  },
+  {
+   "segment": "At risk",
+   "customers": 535,
+   "avg_recency_days": 308.82,
+   "avg_frequency": 2.72,
+   "avg_monetary": 1032.78,
+   "total_monetary": 552538.96,
+   "pct_customers": 9.14,
+   "pct_revenue": 3.24
+  },
+  {
+   "segment": "Potential loyalists",
+   "customers": 273,
+   "avg_recency_days": 25.56,
+   "avg_frequency": 2.0,
+   "avg_monetary": 1331.62,
+   "total_monetary": 363533.51,
+   "pct_customers": 4.67,
+   "pct_revenue": 2.13
+  },
+  {
+   "segment": "Need attention",
+   "customers": 421,
+   "avg_recency_days": 107.97,
+   "avg_frequency": 1.42,
+   "avg_monetary": 543.95,
+   "total_monetary": 229002.87,
+   "pct_customers": 7.19,
+   "pct_revenue": 1.34
+  },
+  {
+   "segment": "Hibernating",
+   "customers": 419,
+   "avg_recency_days": 318.99,
+   "avg_frequency": 1.0,
+   "avg_monetary": 337.32,
+   "total_monetary": 141338.98,
+   "pct_customers": 7.16,
+   "pct_revenue": 0.83
+  },
+  {
+   "segment": "Promising",
+   "customers": 161,
+   "avg_recency_days": 39.4,
+   "avg_frequency": 1.0,
+   "avg_monetary": 332.14,
+   "total_monetary": 53474.65,
+   "pct_customers": 2.75,
+   "pct_revenue": 0.31
+  },
+  {
+   "segment": "New customers",
+   "customers": 78,
+   "avg_recency_days": 11.97,
+   "avg_frequency": 1.0,
+   "avg_monetary": 335.95,
+   "total_monetary": 26204.45,
+   "pct_customers": 1.33,
+   "pct_revenue": 0.15
+  }
+ ],
+ "cohort_matrix": [
+  {
+   "cohort_month": "2009-12",
+   "M+0": 100.0,
+   "M+1": 35.02,
+   "M+2": 33.33,
+   "M+3": 42.48,
+   "M+4": 37.85,
+   "M+5": 35.96,
+   "M+6": 37.64,
+   "M+7": 34.38,
+   "M+8": 33.75,
+   "M+9": 36.17,
+   "M+10": 42.17,
+   "M+11": 49.63,
+   "M+12": 37.64,
+   "cohort_size": 951
+  },
+  {
+   "cohort_month": "2010-01",
+   "M+0": 100.0,
+   "M+1": 21.47,
+   "M+2": 32.07,
+   "M+3": 31.52,
+   "M+4": 27.17,
+   "M+5": 30.98,
+   "M+6": 26.9,
+   "M+7": 23.37,
+   "M+8": 28.53,
+   "M+9": 32.61,
+   "M+10": 30.98,
+   "M+11": 17.93,
+   "M+12": 22.83,
+   "cohort_size": 368
+  },
+  {
+   "cohort_month": "2010-02",
+   "M+0": 100.0,
+   "M+1": 23.47,
+   "M+2": 22.67,
+   "M+3": 29.33,
+   "M+4": 24.53,
+   "M+5": 19.73,
+   "M+6": 19.2,
+   "M+7": 28.8,
+   "M+8": 25.6,
+   "M+9": 27.73,
+   "M+10": 11.47,
+   "M+11": 12.53,
+   "M+12": 15.2,
+   "cohort_size": 375
+  },
+  {
+   "cohort_month": "2010-03",
+   "M+0": 100.0,
+   "M+1": 19.05,
+   "M+2": 23.13,
+   "M+3": 24.26,
+   "M+4": 23.13,
+   "M+5": 20.41,
+   "M+6": 24.72,
+   "M+7": 30.61,
+   "M+8": 27.66,
+   "M+9": 10.88,
+   "M+10": 11.56,
+   "M+11": 14.51,
+   "M+12": 19.95,
+   "cohort_size": 441
+  },
+  {
+   "cohort_month": "2010-04",
+   "M+0": 100.0,
+   "M+1": 19.05,
+   "M+2": 19.05,
+   "M+3": 15.99,
+   "M+4": 18.37,
+   "M+5": 22.11,
+   "M+6": 27.55,
+   "M+7": 26.53,
+   "M+8": 10.54,
+   "M+9": 10.88,
+   "M+10": 7.48,
+   "M+11": 13.95,
+   "M+12": 14.29,
+   "cohort_size": 294
+  },
+  {
+   "cohort_month": "2010-05",
+   "M+0": 100.0,
+   "M+1": 15.69,
+   "M+2": 16.86,
+   "M+3": 17.65,
+   "M+4": 17.65,
+   "M+5": 25.49,
+   "M+6": 21.18,
+   "M+7": 12.55,
+   "M+8": 5.88,
+   "M+9": 8.24,
+   "M+10": 11.37,
+   "M+11": 13.33,
+   "M+12": 15.29,
+   "cohort_size": 255
+  },
+  {
+   "cohort_month": "2010-06",
+   "M+0": 100.0,
+   "M+1": 17.6,
+   "M+2": 18.73,
+   "M+3": 20.6,
+   "M+4": 23.22,
+   "M+5": 28.46,
+   "M+6": 12.73,
+   "M+7": 8.99,
+   "M+8": 8.24,
+   "M+9": 11.24,
+   "M+10": 10.49,
+   "M+11": 13.86,
+   "M+12": 14.98,
+   "cohort_size": 267
+  },
+  {
+   "cohort_month": "2010-07",
+   "M+0": 100.0,
+   "M+1": 15.68,
+   "M+2": 18.38,
+   "M+3": 29.73,
+   "M+4": 29.19,
+   "M+5": 14.05,
+   "M+6": 11.35,
+   "M+7": 14.59,
+   "M+8": 14.59,
+   "M+9": 11.35,
+   "M+10": 13.51,
+   "M+11": 14.59,
+   "M+12": 12.97,
+   "cohort_size": 185
+  },
+  {
+   "cohort_month": "2010-08",
+   "M+0": 100.0,
+   "M+1": 19.63,
+   "M+2": 28.83,
+   "M+3": 32.52,
+   "M+4": 16.56,
+   "M+5": 11.66,
+   "M+6": 9.82,
+   "M+7": 12.88,
+   "M+8": 13.5,
+   "M+9": 12.88,
+   "M+10": 12.88,
+   "M+11": 11.66,
+   "M+12": 14.72,
+   "cohort_size": 163
+  },
+  {
+   "cohort_month": "2010-09",
+   "M+0": 100.0,
+   "M+1": 23.01,
+   "M+2": 23.43,
+   "M+3": 12.97,
+   "M+4": 8.79,
+   "M+5": 10.46,
+   "M+6": 13.81,
+   "M+7": 9.62,
+   "M+8": 12.97,
+   "M+9": 12.97,
+   "M+10": 12.13,
+   "M+11": 10.04,
+   "M+12": 22.59,
+   "cohort_size": 239
+  },
+  {
+   "cohort_month": "2010-10",
+   "M+0": 100.0,
+   "M+1": 25.87,
+   "M+2": 14.67,
+   "M+3": 12.53,
+   "M+4": 8.8,
+   "M+5": 8.27,
+   "M+6": 13.07,
+   "M+7": 13.87,
+   "M+8": 10.67,
+   "M+9": 9.33,
+   "M+10": 10.67,
+   "M+11": 12.8,
+   "M+12": 19.2,
+   "cohort_size": 375
+  },
+  {
+   "cohort_month": "2010-11",
+   "M+0": 100.0,
+   "M+1": 17.48,
+   "M+2": 9.51,
+   "M+3": 9.51,
+   "M+4": 7.67,
+   "M+5": 8.9,
+   "M+6": 12.88,
+   "M+7": 10.12,
+   "M+8": 8.59,
+   "M+9": 9.2,
+   "M+10": 11.04,
+   "M+11": 14.72,
+   "M+12": 25.15,
+   "cohort_size": 326
+  },
+  {
+   "cohort_month": "2010-12",
+   "M+0": 100.0,
+   "M+1": 9.21,
+   "M+2": 5.26,
+   "M+3": 9.21,
+   "M+4": 11.84,
+   "M+5": 6.58,
+   "M+6": 5.26,
+   "M+7": 9.21,
+   "M+8": 5.26,
+   "M+9": 2.63,
+   "M+10": 9.21,
+   "M+11": 19.74,
+   "M+12": 2.63,
+   "cohort_size": 76
+  },
+  {
+   "cohort_month": "2011-01",
+   "M+0": 100.0,
+   "M+1": 16.67,
+   "M+2": 22.22,
+   "M+3": 19.44,
+   "M+4": 22.22,
+   "M+5": 15.28,
+   "M+6": 15.28,
+   "M+7": 12.5,
+   "M+8": 11.11,
+   "M+9": 20.83,
+   "M+10": 25.0,
+   "M+11": 11.11,
+   "M+12": null,
+   "cohort_size": 72
+  },
+  {
+   "cohort_month": "2011-02",
+   "M+0": 100.0,
+   "M+1": 16.0,
+   "M+2": 16.0,
+   "M+3": 18.4,
+   "M+4": 21.6,
+   "M+5": 16.0,
+   "M+6": 16.0,
+   "M+7": 15.2,
+   "M+8": 15.2,
+   "M+9": 18.4,
+   "M+10": 6.4,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 125
+  },
+  {
+   "cohort_month": "2011-03",
+   "M+0": 100.0,
+   "M+1": 17.88,
+   "M+2": 21.79,
+   "M+3": 20.11,
+   "M+4": 22.35,
+   "M+5": 15.08,
+   "M+6": 20.67,
+   "M+7": 20.11,
+   "M+8": 24.02,
+   "M+9": 9.5,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 179
+  },
+  {
+   "cohort_month": "2011-04",
+   "M+0": 100.0,
+   "M+1": 24.53,
+   "M+2": 19.81,
+   "M+3": 19.81,
+   "M+4": 17.92,
+   "M+5": 23.58,
+   "M+6": 17.92,
+   "M+7": 25.47,
+   "M+8": 11.32,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 106
+  },
+  {
+   "cohort_month": "2011-05",
+   "M+0": 100.0,
+   "M+1": 23.42,
+   "M+2": 24.32,
+   "M+3": 16.22,
+   "M+4": 21.62,
+   "M+5": 20.72,
+   "M+6": 26.13,
+   "M+7": 11.71,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 111
+  },
+  {
+   "cohort_month": "2011-06",
+   "M+0": 100.0,
+   "M+1": 23.15,
+   "M+2": 21.3,
+   "M+3": 26.85,
+   "M+4": 20.37,
+   "M+5": 27.78,
+   "M+6": 8.33,
+   "M+7": null,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 108
+  },
+  {
+   "cohort_month": "2011-07",
+   "M+0": 100.0,
+   "M+1": 20.79,
+   "M+2": 29.7,
+   "M+3": 27.72,
+   "M+4": 34.65,
+   "M+5": 15.84,
+   "M+6": null,
+   "M+7": null,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 101
+  },
+  {
+   "cohort_month": "2011-08",
+   "M+0": 100.0,
+   "M+1": 26.17,
+   "M+2": 29.91,
+   "M+3": 26.17,
+   "M+4": 16.82,
+   "M+5": null,
+   "M+6": null,
+   "M+7": null,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 107
+  },
+  {
+   "cohort_month": "2011-09",
+   "M+0": 100.0,
+   "M+1": 27.13,
+   "M+2": 37.77,
+   "M+3": 14.89,
+   "M+4": null,
+   "M+5": null,
+   "M+6": null,
+   "M+7": null,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 188
+  },
+  {
+   "cohort_month": "2011-10",
+   "M+0": 100.0,
+   "M+1": 31.67,
+   "M+2": 15.84,
+   "M+3": null,
+   "M+4": null,
+   "M+5": null,
+   "M+6": null,
+   "M+7": null,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 221
+  },
+  {
+   "cohort_month": "2011-11",
+   "M+0": 100.0,
+   "M+1": 14.14,
+   "M+2": null,
+   "M+3": null,
+   "M+4": null,
+   "M+5": null,
+   "M+6": null,
+   "M+7": null,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 191
+  },
+  {
+   "cohort_month": "2011-12",
+   "M+0": 100.0,
+   "M+1": null,
+   "M+2": null,
+   "M+3": null,
+   "M+4": null,
+   "M+5": null,
+   "M+6": null,
+   "M+7": null,
+   "M+8": null,
+   "M+9": null,
+   "M+10": null,
+   "M+11": null,
+   "M+12": null,
+   "cohort_size": 28
+  }
+ ],
+ "rfm_head": [
+  {
+   "customer_id": 12346,
+   "recency_days": 326,
+   "frequency": 3,
+   "monetary": 77352.96,
+   "r_score": 2,
+   "f_score": 3,
+   "m_score": 5,
+   "rfm_cell": "235",
+   "segment": "At risk"
+  },
+  {
+   "customer_id": 12347,
+   "recency_days": 3,
+   "frequency": 8,
+   "monetary": 4921.53,
+   "r_score": 5,
+   "f_score": 4,
+   "m_score": 5,
+   "rfm_cell": "545",
+   "segment": "Champions"
+  },
+  {
+   "customer_id": 12348,
+   "recency_days": 76,
+   "frequency": 5,
+   "monetary": 1658.4,
+   "r_score": 3,
+   "f_score": 4,
+   "m_score": 4,
+   "rfm_cell": "344",
+   "segment": "Loyal customers"
+  },
+  {
+   "customer_id": 12349,
+   "recency_days": 19,
+   "frequency": 3,
+   "monetary": 3678.69,
+   "r_score": 5,
+   "f_score": 3,
+   "m_score": 5,
+   "rfm_cell": "535",
+   "segment": "Loyal customers"
+  },
+  {
+   "customer_id": 12350,
+   "recency_days": 311,
+   "frequency": 1,
+   "monetary": 294.4,
+   "r_score": 2,
+   "f_score": 1,
+   "m_score": 2,
+   "rfm_cell": "212",
+   "segment": "Hibernating"
+  },
+  {
+   "customer_id": 12351,
+   "recency_days": 376,
+   "frequency": 1,
+   "monetary": 300.93,
+   "r_score": 2,
+   "f_score": 1,
+   "m_score": 2,
+   "rfm_cell": "212",
+   "segment": "Hibernating"
+  },
+  {
+   "customer_id": 12352,
+   "recency_days": 37,
+   "frequency": 9,
+   "monetary": 1729.54,
+   "r_score": 4,
+   "f_score": 5,
+   "m_score": 4,
+   "rfm_cell": "454",
+   "segment": "Champions"
+  },
+  {
+   "customer_id": 12353,
+   "recency_days": 205,
+   "frequency": 2,
+   "monetary": 406.76,
+   "r_score": 2,
+   "f_score": 2,
+   "m_score": 2,
+   "rfm_cell": "222",
+   "segment": "At risk"
+  }
+ ]
+}

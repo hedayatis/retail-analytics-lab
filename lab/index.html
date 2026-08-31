@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retail Analytics Lab — UCI Online Retail II</title>
+<meta name="description" content="A reproducible retail analytics pipeline on the UCI Online Retail II dataset: data contracts, a DuckDB star schema, cross-engine parity tests, and live R and Python in the browser.">
+<link rel="stylesheet" href="lab.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div>
+      <div class="eyebrow">Engineering notebook · not a tutorial</div>
+      <h1>Retail Analytics Lab</h1>
+      <p class="lede">A production-shaped analytics pipeline over <b>1,067,371 real transactions</b>
+      from the UCI <i>Online Retail II</i> dataset — the same data behind Chen et al.'s
+      RFM segmentation paper. Data contracts at every stage boundary, an auditable
+      cleaning ledger, a DuckDB star schema, and independent Python, SQL and base-R
+      implementations, with RFM also checked through a pure-Python browser port.</p>
+      <p class="lede small">The R and Python below are not screenshots. They compile and
+      execute in your browser via WebAssembly, on real data, and you can edit them.</p>
+      <p class="byline">Built by Sam (Sajjad Hedayati) · <span id="src-link"></span></p>
+    </div>
+    <button class="ghost" id="theme">◐ Theme</button>
+  </div>
+</header>
+
+<nav class="toc"><div class="wrap"><ul>
+  <li><a href="#data" class="on">Data</a></li>
+  <li><a href="#architecture">Architecture</a></li>
+  <li><a href="#contracts">Contracts</a></li>
+  <li><a href="#cleaning">Cleaning ledger</a></li>
+  <li><a href="#r-lab">Live R</a></li>
+  <li><a href="#py-lab">Live Python</a></li>
+  <li><a href="#parity">Parity harness</a></li>
+  <li><a href="#results">Results</a></li>
+  <li><a href="#sql">SQL layer</a></li>
+</ul></div></nav>
+
+<main class="wrap">
+
+<!-- ================================================================= -->
+<section id="data">
+  <div class="sec-head">
+    <span class="sec-num">01 — PROVENANCE</span>
+    <h2>The data, and where it actually comes from</h2>
+    <p class="muted">Transactions from a UK-registered, non-store online giftware retailer
+    between 1 December 2009 and 9 December 2011. It is the dataset behind
+    <i>Chen, Sain &amp; Guo (2012), "Data mining for the online retail industry: a case
+    study of RFM model-based customer segmentation"</i> — which is why RFM is the analysis
+    this lab implements: the method and the data belong together in the literature.</p>
+  </div>
+  <div class="stats" id="stat-strip"></div>
+  <div class="callout">
+    <b>Provenance is enforced, not asserted.</b> The pipeline verifies the source file's
+    SHA-256 against a committed sidecar before reading a single row. If the upstream file
+    is ever swapped, the run aborts instead of quietly analysing different data.
+    <span class="tiny">Source: the <code>onlineretail2</code> R package, which redistributes the
+    UCI data with the donor's (Dr Daqing Chen) permission for non-commercial use.</span>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="architecture">
+  <div class="sec-head">
+    <span class="sec-num">02 — ARCHITECTURE</span>
+    <h2>Five stages, each with a contract on its output</h2>
+    <p class="muted">The arrows are where most pipelines break silently. Here every one of
+    them is a checked boundary: the frame crossing it is validated against a declared
+    schema, and an ERROR-severity violation stops the run rather than propagating into
+    an aggregate three steps later.</p>
+  </div>
+  <div class="card"><div id="arch"></div></div>
+</section>
+
+<!-- ================================================================= -->
+<section id="contracts">
+  <div class="sec-head">
+    <span class="sec-num">03 — DATA CONTRACTS</span>
+    <h2>A schema you can execute</h2>
+    <p class="muted">Roughly 200 lines of dependency-free Python. Not a re-implementation
+    of Great Expectations — the point is that the design fits on one screen and every
+    stage can therefore afford to use it.</p>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="codewrap">
+        <div class="codebar"><span class="name">src/retail_lab/schemas.py</span>
+          <span class="tag py">python</span></div>
+        <pre id="code-contract"></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>What it caught on the real data</h3>
+        <p class="small muted">Live output from the last pipeline run.</p>
+        <div class="scroll"><table class="tbl" id="tbl-dq"></table></div>
+        <p class="tiny" style="margin-top:12px">A WARN is recorded and passed downstream;
+        an ERROR aborts. Duplicates are a WARN here because the cleaning stage owns that
+        decision and prices it explicitly — see below.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="cleaning">
+  <div class="sec-head">
+    <span class="sec-num">04 — THE CLEANING LEDGER</span>
+    <h2>Cleaning is a decision log, not a filter chain</h2>
+    <p class="muted">Every rule states what it removes, why, and what it cost. An analyst
+    who disagrees with a rule can see its exact price and change one declaration. The
+    rows always reconcile: <code>rows_before − rows_removed = rows_after</code>, asserted
+    in the test suite.</p>
+  </div>
+  <div class="scroll card"><table class="tbl" id="tbl-ledger"></table></div>
+  <div class="callout warn" id="ledger-note"></div>
+</section>
+
+<!-- ================================================================= -->
+<section id="r-lab">
+  <div class="sec-head">
+    <span class="sec-num">05 — LIVE R</span>
+    <h2>Base R, compiled to WebAssembly, running here</h2>
+    <p class="muted">This is <code>R/rfm.R</code> from the repository, unmodified, executing
+    against a stratified sample of the real transactions. Base R only — no dplyr, no
+    data.table — because the lab must work on first load without reaching a CRAN mirror.
+    Edit the code and re-run it.</p>
+  </div>
+  <div class="codewrap">
+    <div class="codebar">
+      <span class="name">R/rfm.R → rfm_build(sales)</span>
+      <span class="runbar">
+        <span class="tag r">R 4.6 · webR</span>
+        <span class="status"><span class="dot" id="r-dot"></span><span id="r-status">runtime not loaded</span></span>
+        <button class="run" id="r-run">Run R</button>
+      </span>
+    </div>
+    <textarea class="code" id="r-code" spellcheck="false"></textarea>
+    <pre class="out" id="r-out">Press “Run R”. First run downloads the R WebAssembly runtime (~30 MB) and takes 20–40 seconds; afterwards it is instant.</pre>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="py-lab">
+  <div class="sec-head">
+    <span class="sec-num">06 — LIVE PYTHON</span>
+    <h2>The dependency-free port, running here</h2>
+    <p class="muted">The repository's primary implementation uses pandas. Loading pandas
+    into a web page costs the visitor about 10 MB and twenty seconds to do a group-by, so
+    the lab runs <code>analytics/rfm_stdlib.py</code> — standard library only. That port is
+    not a shortcut: the test suite asserts it matches the pandas version row-for-row, so
+    it cannot drift into being "the fast approximate one".</p>
+  </div>
+  <div class="codewrap">
+    <div class="codebar">
+      <span class="name">src/retail_lab/analytics/rfm_stdlib.py → build_from_rows(rows)</span>
+      <span class="runbar">
+        <span class="tag py">Python · Pyodide</span>
+        <span class="status"><span class="dot" id="py-dot"></span><span id="py-status">runtime not loaded</span></span>
+        <button class="run" id="py-run">Run Python</button>
+      </span>
+    </div>
+    <textarea class="code" id="py-code" spellcheck="false"></textarea>
+    <pre class="out" id="py-out">Press “Run Python”. First run downloads the Python WebAssembly runtime (~12 MB).</pre>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="parity">
+  <div class="sec-head">
+    <span class="sec-num">07 — THE PARITY HARNESS</span>
+    <h2>Two languages, one answer — checked in front of you</h2>
+    <p class="muted">This is the part of the project I would actually defend in an
+    interview. RFM is implemented four ways and cohort retention three ways across
+    different execution models, with tests over comparable outputs. It is what catches
+    <i>definitional</i> drift — a different recency convention, a different tie rule, day
+    arithmetic instead of calendar months — which no single-language test can see.</p>
+  </div>
+  <div class="card">
+    <div class="runbar" style="margin-bottom:14px">
+      <button class="run" id="parity-run">Run R and Python, then diff</button>
+      <span class="status"><span class="dot" id="parity-dot"></span><span id="parity-status">idle</span></span>
+    </div>
+    <pre class="out" id="parity-out" style="max-height:420px">Runs both runtimes on the same sample and compares all 5,852-customer columns element by element.</pre>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>The tie trap this rule exists to avoid</h3>
+      <p class="small muted">The obvious way to score RFM is <code>NTILE(5)</code> in SQL,
+      <code>pd.qcut</code> in pandas, <code>cut(quantile(…))</code> in R. All three claim to make
+      quintiles. All three disagree on this data, because roughly 40% of customers have
+      <code>frequency = 1</code> — and <code>NTILE</code> splits a run of tied values across bucket
+      boundaries by <i>row order</i>. Two customers who behaved identically get different
+      scores, and which one gets the better score depends on how the rows happened to sort.</p>
+      <p class="small muted">The fix is to define scores on <b>values</b>, not row positions:</p>
+      <pre style="font-size:12px">breaks = quantile(x, [.20,.40,.60,.80])   # type 7
+score  = 1 + #{b in breaks : x > b}       # ascending
+score  = 5 - #{b in breaks : x > b}       # descending</pre>
+      <p class="tiny">Tied customers now always score the same, in every language. The cost
+      is that quintiles are no longer exactly equal-sized where ties straddle a boundary —
+      which is the honest outcome, not a defect.</p>
+    </div>
+    <div class="card">
+      <h3>Defects this harness actually found</h3>
+      <ul class="small muted" style="padding-left:18px;margin:0">
+        <li style="margin-bottom:10px"><b>A one-day recency disagreement.</b> Python
+        subtracted raw timestamps, so a purchase at 13:00 on 9 Dec was 0 days from a
+        10 Dec reference; SQL and R worked on dates and said 1. That silently moved
+        customers across an <code>r_score</code> boundary. Fixed at the definition — recency is
+        whole calendar days — not with a tolerance in the test.</li>
+        <li style="margin-bottom:10px"><b>A silent 3,393-row drop.</b> The returns
+        finaliser was discarding zero-value write-off lines without recording them.
+        The ledger now accounts for them explicitly.</li>
+        <li><b>Month arithmetic.</b> 31 Jan → 1 Mar is 29 days but two calendar months.
+        Day-difference ÷ 30.44 drifts by a whole index over a two-year window; the
+        cohort index is computed as <code>12·Δyear + Δmonth</code> in all three implementations.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="results">
+  <div class="sec-head">
+    <span class="sec-num">08 — WHAT THE DATA SAYS</span>
+    <h2>Results, on the full population</h2>
+    <p class="muted">Computed over all 1,003,214 cleaned sales lines — not the browser
+    sample and checked across the applicable independent implementations.</p>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Where the money sits</h3>
+      <p class="small muted" id="seg-note"></p>
+      <div id="chart-seg"></div>
+    </div>
+    <div class="card">
+      <h3>Monthly revenue</h3>
+      <p class="small muted">The two Novembers are the giftware seasonal peak; the final
+      month is truncated at 9 December.</p>
+      <div id="chart-monthly"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Cohort retention</h3>
+    <p class="small muted">Share of each acquisition cohort still ordering, by months
+    elapsed. Empty cells are <b>right-censored</b>, not zero: a cohort acquired last month
+    has not failed to retain at M+6, it simply cannot be observed there yet.</p>
+    <div class="scroll" id="chart-cohort"></div>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section id="sql">
+  <div class="sec-head">
+    <span class="sec-num">09 — THE SQL LAYER</span>
+    <h2>Star schema and analytical SQL</h2>
+    <p class="muted">DuckDB rather than SQLite, because the analysis leans on window
+    functions, <code>QUANTILE_CONT</code>, <code>MODE</code> and list types — and because an embedded
+    columnar engine is the honest choice for a 1M-row analytical workload that has to run
+    from a laptop with no server. Grain is declared per table; four referential and
+    arithmetic integrity checks run after every build.</p>
+  </div>
+  <div class="codewrap">
+    <div class="codebar">
+      <span class="name" id="sql-name">sql/01_star_schema.sql</span>
+      <span class="runbar">
+        <span class="tag sql">DuckDB SQL</span>
+        <select id="sql-pick" class="ghost">
+          <option value="01_star_schema.sql">01 — star schema</option>
+          <option value="02_rfm.sql">02 — RFM</option>
+          <option value="03_cohort_retention.sql">03 — cohort retention</option>
+        </select>
+      </span>
+    </div>
+    <pre id="code-sql"></pre>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p><b>Reproduce it:</b> <code>make pipeline &amp;&amp; make test &amp;&amp; make parity-r</code> —
+  60 tests, one command, no notebook state.</p>
+  <p class="tiny">Dataset © the donor, Dr Daqing Chen (London South Bank University),
+  redistributed for <b>non-commercial use only</b>; this lab is a non-commercial portfolio
+  project. Cite: Chen, D., Sain, S.L., &amp; Guo, K. (2012), <i>Journal of Database Marketing
+  &amp; Customer Strategy Management</i> 19(3), 197–208.</p>
+</footer>
+
+<script type="module" src="lab.js"></script>
+</body>
+</html>

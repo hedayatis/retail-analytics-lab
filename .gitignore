@@ -1,0 +1,12 @@
+# generated artefacts — rebuild with `make pipeline`
+data/processed/
+data/reports/
+# downloaded donor data — fetched and checksum-verified by `make pipeline`
+data/raw/*.rda
+# vendored WebAssembly runtimes (61 MB): the lab falls back to jsDelivr
+lab/vendor/
+lab/node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/

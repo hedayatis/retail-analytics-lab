@@ -1,0 +1,18 @@
+{
+  "name": "retail-analytics-lab-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser lab + CI harness that executes the project's base-R implementations under webR (R compiled to WebAssembly) and diffs them against the Python outputs.",
+  "scripts": {
+    "parity": "node run_r_parity.mjs",
+    "serve": "node serve.mjs",
+    "vendor": "node vendor.mjs"
+  },
+  "dependencies": {
+    "webr": "^0.6.0"
+  },
+  "devDependencies": {
+    "pyodide": "^314.0.6"
+  }
+}
