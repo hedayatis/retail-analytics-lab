@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "retail-analytics-lab"
-version = "1.0.0"
+version = "1.0.1"
 description = "Reproducible retail analytics on UCI Online Retail II: contracts, star schema, and cross-engine Python/SQL/R parity checks."
 requires-python = ">=3.10"
 dependencies = [
