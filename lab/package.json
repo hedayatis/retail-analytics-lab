@@ -1,6 +1,6 @@
 {
   "name": "retail-analytics-lab-web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "Browser lab + CI harness that executes the project's base-R implementations under webR (R compiled to WebAssembly) and diffs them against the Python outputs.",

@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.0.1] - 2026-08-31
+
+**Status:** release
+
+### Fixed
+
+- Give each Pages run and retry a unique artifact name, shared by upload and
+  deployment, so retained artifacts from earlier attempts cannot conflict.
+- Synchronize Python, browser-package and repository version metadata.
+
+### Validation
+
+- Local static checks verify matching upload/deploy names, per-attempt uniqueness
+  and consistent version metadata.
+- The unchanged analytics engine previously passed all 60 tests and the
+  full-data parity checks on main. This revision is checked again by CI;
+  the publishing PR records the final workflow results.
+
+### Compatibility and migration
+
+- Backward compatible; no analytical or data-contract changes. Pages must use
+  GitHub Actions as its publishing source; this setting has been enabled.
+
+### Known limitations
+
+- WebAssembly browser-runtime execution is not covered by deployment checks.
+- Existing data-use and external-runtime limitations remain as below.
+
 ## [1.0.0] - 2026-08-31
 
 **Status:** release

@@ -4,6 +4,9 @@
 
 **[Open the live browser lab](https://hedayatis.github.io/retail-analytics-lab/)**
 
+Current revision: **1.0.1**. Release history and validation are recorded in
+`CHANGELOG.md`. GitHub Pages uses a unique artifact per workflow run and retry.
+
 **A reproducible analytics pipeline over 1,067,371 real transactions, with RFM
 implemented four ways and cohort retention three ways, backed by parity tests.**
 
